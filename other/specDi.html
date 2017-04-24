@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="1200" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+	
+	var radius = 200;
+	var n = 5;
+	var effectiveRadius = 3;
+
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+
+	var centreX = c.width/2;
+	var centreY = c.height/2;
+
+	var rotationAngle = (2*Math.PI)/n;
+
+	var distances = [];
+
+	function drawPoint(angle) {
+		ctx.beginPath();
+	    ctx.arc(centreX+radius*Math.cos(angle), centreY+radius*Math.sin(angle), 4, 0, 2 * Math.PI);
+	    ctx.fillStyle = 'black';
+	    ctx.fill();
+	    ctx.stroke();
+	}
+
+
+	function distance(x1,y1,x2,y2) {
+		var dx = x1-x2;
+		var dy = y1-y2;
+		return Math.sqrt(dx*dx+dy*dy);
+	}
+
+	ctx.setLineDash([5, 15]);
+
+	<!--draw axis-->
+	ctx.moveTo(centreX, 0)
+	ctx.lineTo(centreX, c.height)
+	ctx.moveTo(0, centreY)
+	ctx.lineTo(c.width, centreY)
+	ctx.stroke()
+
+	<!--draw circle-->
+	ctx.beginPath();
+	ctx.arc(centreX, centreY, radius, 0, 2 * Math.PI);
+	ctx.stroke();
+
+	<!--draw points-->
+	for (i=0; i<n; i++) {
+		drawPoint(i*rotationAngle)
+	}
+
+
+	for (i=1; i<n; i++) {
+		ctx.setLineDash([10, 0]);
+		
+		ctx.beginPath();
+		ctx.moveTo(point1[0], point1[1]);
+		ctx.lineTo(point2[0], point2[1]);
+		ctx.stroke();
+		
+		distances.push(distance(centreX+radius, centreY, centreX+radius*Math.cos(i*rotationAngle), centreY+radius*Math.sin(i*rotationAngle)));		
+	}
+
+	for (i=0; i<n-1; i++) {
+		distances[i] = distances[i]/(radius/effectiveRadius);
+	}
+
+	var L = distances[0]
+
+	for (i=1; i<n-1; i++) {
+		L = L*distances[i]
+	}	
+
+	console.log(distances);
+	console.log(L);
+
+</script> 
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="1200" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+	
+
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+
+	ctx.canvas.width  = window.innerWidth-30;
+  	ctx.canvas.height = window.innerHeight-30;
+
+	var n = 31;
+	var iterations = 50;
+	var colour = true;
+
+	var ratio = [1, 12];
+
+	var radius = 200;
+	var centreX = c.width/2;
+	var centreY = c.height/2;
+
+	var colourShift = 255/iterations;
+	var rotationAngle = (2*Math.PI)/n;
+	var animation = false;
+
+	ctx.fillStyle="black";
+	ctx.fillRect(0,0,c.width, c.height);
+
+	function drawPoint([x, y]) {
+		ctx.beginPath();
+	    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+	    ctx.fillStyle = 'black';
+	    ctx.fill();
+	    ctx.stroke();
+	}
+
+	function midpoint([x1, y1], [x2, y2]) {
+		return [(ratio[0]*x1+ratio[1]*x2)/(ratio[0]+ratio[1]), (ratio[0]*y1+ratio[1]*y2)/(ratio[0]+ratio[1])];
+	}
+
+	function drawLine([x1, y1], [x2, y2]) {
+		ctx.setLineDash([10, 0]);
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+	}
+
+	function tracePoints(points) {
+		ctx.strokeStyle=colourPallet[n-1]
+		drawLine(points[0], points[points.length-1]);
+		for (i=0;i<points.length-1;i++) {
+			ctx.strokeStyle=colourPallet[i]
+			drawLine(points[i], points[i+1]);
+		}
+	}
+
+	function midpointSet(points) {
+		set = [midpoint(points[points.length-1], points[0])]
+		for (i=0;i<points.length-1;i++) {
+			set.push(midpoint(points[i], points[i+1]));
+		}
+		return set;
+	}
+
+	function animate() {
+		setInterval(redraw, 100)
+	}
+
+	function redraw() {
+
+		ctx.clearRect(0, 0, c.width, c.height);
+
+		ctx.fillStyle="black";
+		ctx.fillRect(0,0,c.width, c.height);
+
+		rimPoints = [];
+
+		rimPoints.push(randomPoints);
+
+		ratio = [ratio[0], ratio[1]+1]
+
+		console.log(ratio)
+		itterate();
+	}
+
+	var rimPoints = [];
+	var randomPoints = [];
+
+	for (i=0;i<n;i++) {
+		randomPoints.push([Math.floor((c.width)*Math.random()), Math.floor((c.height)*Math.random())]);
+	}
+
+	rimPoints.push(randomPoints);
+
+	var colourPallet = []
+	var cFactor = 2*Math.PI/n;
+
+	for (x=0;x<n;x++) {	
+		colourPallet.push("rgb("+String(Math.floor(127*Math.cos(x*cFactor)+127))+","+String(Math.floor(127*Math.cos(x*cFactor+(2*Math.PI)/3)+127))+","+String(Math.floor(127*Math.cos(x*cFactor+(4*Math.PI)/3)+127))+")");	
+	}
+
+	function itterate() {
+		console.log("heyyyyyy")
+
+		for (z=0;z<iterations;z++) {
+			
+			tracePoints(rimPoints[z]);
+			rimPoints.push(midpointSet(rimPoints[z]));
+			tracePoints(rimPoints[z+1]);
+		}
+
+		console.log(rimPoints[1])
+	}
+
+	itterate()
+
+	if (animation == true) {
+		animate()
+	}
+	
+	
+
+</script> 
+
+</body>
+</html>

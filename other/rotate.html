@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="1200" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<button onclick="animate()">Move</button>
+
+<script>
+	
+
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+
+	var n = 60;
+	var iterations = 20;
+	var windowScale = 1;
+	var renderScale = 0.4;
+
+	var colour = true;
+	var restrictRender = true;
+	var renderPoints = true;
+	var frameRate = 100;
+	var currentFrame = 0;
+
+	var intervalID;
+
+	function drawPoint([x, y]) {
+		ctx.beginPath();
+	    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+	    ctx.fill();
+	    ctx.stroke();
+	}
+
+	function midpoint([x1, y1], [x2, y2]) {
+		return [(x1+x2)/2, (y1+y2)/2];
+	}
+
+	function drawLine([x1, y1], [x2, y2]) {
+		ctx.setLineDash([10, 0]);
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+	}
+
+	function tracePoints(points) {
+		drawLine(points[0], points[points.length-1]);
+		for (i=0;i<points.length-1;i++) {
+			drawLine(points[i], points[i+1]);
+		}
+	}
+
+	function midpointSet(points) {
+		set = [midpoint(points[0], points[points.length-1])]
+		for (i=0;i<points.length-1;i++) {
+			set.push(midpoint(points[i], points[i+1]));
+		}
+		return set;
+	}
+
+	function animate() {
+		intervalID = setInterval(redraw, 10)
+	}
+
+	function redraw() {
+
+		if (currentFrame == 2*frameRate) {
+			generateVectors;
+			currentFrame++
+		} else {
+
+			currentFrame++
+			ctx.clearRect(0, 0, c.width, c.height);
+
+			for (i=0;i<n;i++) {
+
+				if (direction=="L") {
+					currentPoints[i][0] = currentPoints[i][0]+Math.round(Lvectors[i][0]);
+					currentPoints[i][1] = currentPoints[i][1]+Math.round(Lvectors[i][1]);
+				} else if (direction=="R") {
+					currentPoints[i][0] = currentPoints[i][0]+Math.round(Rvectors[i][0]);
+					currentPoints[i][1] = currentPoints[i][1]+Math.round(Rvectors[i][1]);
+				} else if (direction=="U") {
+					currentPoints[i][0] = currentPoints[i][0]+Math.round(Uvectors[i][0]);
+					currentPoints[i][1] = currentPoints[i][1]+Math.round(Uvectors[i][1]);
+				} else if (direction=="D") {
+					currentPoints[i][0] = currentPoints[i][0]+Math.round(Dvectors[i][0]);
+					currentPoints[i][1] = currentPoints[i][1]+Math.round(Dvectors[i][1]);
+				}
+				
+				if (renderPoints == true) {
+					drawPoint(currentPoints[i]);
+				}
+			}
+
+			rimPoints = [];
+			rimPoints.push(currentPoints);
+			itterate();
+		}
+	}
+
+	function generateRandomPoints() {
+		for (i=0;i<n;i++) {
+			randomPoints.push([Math.floor((c.width*windowScale)*Math.random()), Math.floor((c.height*windowScale)*Math.random())]);
+		}
+	}
+
+	function generateVectors() {
+		Lvectors = [];
+		Rvectors = [];
+		Uvectors = [];
+		Dvectors = [];
+
+		for (i=0;i<n;i++) {
+			Lvectors.push([(c.width/2-randomPoints[i][0])/frameRate, 0]);
+			Rvectors.push([-(c.width/2-randomPoints[i][0])/frameRate, 0]);
+			Uvectors.push([0, (c.height/2-randomPoints[i][1])/frameRate]);
+			Dvectors.push([0, -(c.height/2-randomPoints[i][1])/frameRate])
+			if (renderPoints == true) {
+				ctx.fillStyle="rgb(0, 0, 0)";
+				drawPoint(randomPoints[i]);
+			}
+		}
+	}
+	
+	function itterate() {
+		for (z=0;z<iterations;z++) {
+			if (colour == true) {
+				var str = "rgb("+String(Math.floor(127*Math.cos(alpha*z)+127))+","+String(Math.floor(127*Math.cos(alpha*z+(2*Math.PI)/3)+127))+","+String(Math.floor(127*Math.cos(alpha*z+(4*Math.PI)/3)+127))+")";
+				ctx.strokeStyle=str;
+			}
+
+			rimPoints.push(midpointSet(rimPoints[z]));
+
+			if (restrictRender==false) {
+				tracePoints(rimPoints[z]);
+				tracePoints(rimPoints[z+1]);
+			} else if (z>renderScale*iterations) {
+				tracePoints(rimPoints[z]);
+				tracePoints(rimPoints[z+1]);
+			}
+		}
+	}
+
+	function checkKey(e) {
+	
+	    e = e || window.event;
+	    
+	    if (e.keyCode == '38') {
+	        console.log("up")
+	        direction = "D"
+	    }
+	    else if (e.keyCode == '40') {
+	        console.log("down")
+	        direction = "U"
+	    }
+	    else if (e.keyCode == '37') {
+	       console.log("left")
+	       direction = "L"
+	    }
+	    else if (e.keyCode == '39') {
+	       console.log("right")
+	       direction = "R"
+	    }
+
+	}
+
+	var rimPoints = [];
+	var currentPoints = []
+
+	var randomPoints = [];
+
+	var Lvectors, Rvectors, Uvectors, Dvectors;
+
+	var direction = "L";
+
+
+	generateRandomPoints();
+	generateVectors();
+
+	currentPoints = randomPoints;
+	rimPoints.push(currentPoints);
+
+	alpha = 2*Math.PI/iterations;
+	
+	itterate();
+	animate();
+
+	document.onkeydown = checkKey;
+
+</script> 
+
+</body>
+</html>
