@@ -1,1 +1,1 @@
-<?php header( 'Location: /averagingPoints.html' ) ;  ?>
+<?php header( 'Location: /rotate.html' ) ;  ?>

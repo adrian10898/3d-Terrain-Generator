@@ -68,8 +68,9 @@
 			<td><button onclick="colourToggle()">ENABLE COLOUR</button></td>
 		</tr>
 	</table>
+
+<script>
 	
-	<script>
 
 	var c = document.getElementById("myCanvas");
 	var ctx = c.getContext("2d");
@@ -88,9 +89,20 @@
 	var renderPoints = true;
 
 	alpha = 2*Math.PI/maxIterationRendered;
+	var wx = 0; /*radians per frame*/
+	var wy = 2*Math.PI/200;
+	divisionRatio = [1, 1];
 
 	var randomPoints;
+	var initialPoints;
 	var rimPoints;
+	var radii;
+	var altitudes;
+
+	var frame = 0;
+
+	var mouseDownPoint = [0, 0];
+	var mouseUpPoint = [0, 0];
 
 	function drawPoint([x, y]) {
 		ctx.beginPath();
@@ -101,7 +113,7 @@
 	}
 
 	function midpoint([x1, y1], [x2, y2]) {
-		return [(x1+x2)/2, (y1+y2)/2];
+		return [(divisionRatio[0]*x1+divisionRatio[1]*x2)/(divisionRatio[0]+divisionRatio[1]), (divisionRatio[0]*y1+divisionRatio[1]*y2)/(divisionRatio[0]+divisionRatio[1])];
 	}
 
 	function drawLine([x1, y1], [x2, y2]) {
@@ -135,18 +147,22 @@
 
 	function generateRandomSet() {
 		randomPoints = [];
+		radii = [];
+		altitudes = [];
 
 		for (i=0;i<maxRandomSetSize+1;i++) {
-			randomPoints.push([Math.floor((c.width*windowScale)*Math.random()), Math.floor((c.height*windowScale)*Math.random())]);
-			if (renderPoints == true) {
-				drawPoint(randomPoints[i]);
-			}
+			randomX = Math.floor((c.width*windowScale)*Math.random());
+			randomY = Math.floor((c.height*windowScale)*Math.random());
+			randomPoints.push([randomX, randomY]);
+			radii.push([c.width/2-randomX, c.height/2-randomY]);
+			altitudes.push(10*Math.random());
 		}
+
+		initialPoints = randomPoints;
 	}
 
 	function generateRimSet() {
 		rimPoints = [];
-
 		rimPoints.push(randomPoints);
 
 		for (z=0;z<maxIterationRendered;z++) {
@@ -155,6 +171,7 @@
 	}
 
 	function draw() {
+
 		ctx.clearRect(0, 0, c.width, c.height);
 
 		if (renderPoints) {
@@ -182,6 +199,12 @@
 		}
 	}
 
+	function generateNewSets() {
+		generateRandomSet();
+		generateRimSet();
+		draw();
+	}
+
 	function redraw() {
 
 		if (n != Math.floor(document.getElementById("n").value)) {
@@ -194,13 +217,28 @@
 		draw();
 	}
 
-	function generateNewSets() {
-		generateRandomSet();
+	function animate() {
+
+		frame = frame+wx;
+
+		if (Math.floor(wx*10000) != 0) {
+			wx = wx * 0.99;
+		} else {
+			wx = 0;
+		}
+		console.log(wx);
+
+		for (p=0; p<n+1; p++) {
+			randomPoints[p][0] = c.width/2+radii[p][0]*Math.sin(frame+altitudes[p]);
+			randomPoints[p][1] = c.height/2+radii[p][1]*Math.sin(wy*frame+altitudes[p]);
+		}
+
 		generateRimSet();
 		draw();
 	}
 
 	function colourToggle() {
+		console.log("triggered");
 		if (colourEnabled) {
 			colourEnabled = false;
 			ctx.strokeStyle = "#000000";
@@ -218,9 +256,37 @@
 		}
 		redraw();
 	}
+
+	c.onmousedown = function(e) {
+    	wx = 0.1;
+    	drawPoint([e.offsetX, e.offsetY]);
+    	mouseDownPoint = [e.offsetX, e.offsetY];
+    	drawPoint(mouseDownPoint);
+	}
+
+	c.onmouseup = function(e) {
+
+		drawLine([0, c.height/2], [c.width, c.height/2]);
+		drawLine([c.width/2, 0], [c.width/2, c.height]);
+
+		mouseUpPoint = [e.offsetX, e.offsetY];
+		drawPoint(mouseUpPoint);
+		drawLine(mouseDownPoint, mouseUpPoint);
+
+		var mouseVector = [mouseDownPoint[0]-mouseUpPoint[0], mouseDownPoint[1]-mouseUpPoint[1]];
+		
+		for (p=0; p<n; p++) {
+			var d = Math.abs((mouseVector[0]*randomPoints[p][0]+mouseVector[1]*randomPoints[p][1])/(Math.sqrt(mouseVector[0]**2+mouseVector[1]**2)));
+			var foot = [mouseVector[0]*(randomPoints[p][0]-d)/50, mouseVector[1]*(randomPoints[p][1]-d)/50];
+			console.log(foot);
+			drawPoint(foot);
+		}
+	}
 	
 	setupDefaultValues();
 	generateNewSets();
+
+	/*setInterval(animate, 30);*/
 
 </script> 
 
